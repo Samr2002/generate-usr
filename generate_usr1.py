@@ -64,11 +64,11 @@ for sent in prune_output_list:
     split_sent=sent.split(",")
     wx_word=split_sent[1]
     #print(split_sent)
-    suffix=split_sent[5]
+    suffix=split_sent[6]
     suffix_dictionary[wx_word]=suffix
 
     
-#print(suffix_dictionary)
+print("sd",suffix_dictionary)
     #print(type(word))
 #---------------------------------------------------------------------
 #Creating a dictionary for wx_words and their indexes
@@ -98,16 +98,16 @@ temp_wx_words_dict=wx_words_dictionary_new#temporary for loop usage
 #print("wx_words:",wx_words_dictionary_new)
 #---------------------------------------------------------------------
 #Open NER file and append its output into a list
-NER_dict={}
-inx=0
-y=open(ner_file_input,"r")
-for line in y:
-    inx+=1
-    token=line.strip()
-    if token.split("\t")[1]!="O":
-        wx_word=wx_words_dictionary[inx]
-        #print(wx_word)
-        NER_dict[wx_word]=token.split("\t")[1]
+# NER_dict={}
+# inx=0
+# y=open(ner_file_input,"r")
+# for line in y:
+#     inx+=1
+#     token=line.strip()
+#     if token.split("\t")[1]!="O":
+#         wx_word=wx_words_dictionary[inx]
+#         #print(wx_word)
+#         NER_dict[wx_word]=token.split("\t")[1]
 #y.close()
 #print("ner_dict:",NER_dict)
 #----------------------------------------------------------------------
@@ -253,11 +253,13 @@ def word_search_from_end(search_word):
     #print("search_word:",search_word)
     match_key_list=[]
     matched_tams={}
-    real_tam_search=search_word
+    real_tam_search=search_word.strip()
     for line in TAM_dictionary_list:
         
         for value in line:
+            #print(value)
             if real_tam_search.endswith(value) and  value!="" :
+                #print("val:",value)
                 key=value
                 line0_length=len(line[0])
                 if key not in matched_tams.keys():
@@ -278,7 +280,7 @@ def word_search_from_end(search_word):
             key_tam=matched_tams[longest_key_value]
     
         
-    #print(key_tam)
+        print("kt",key_tam)
     #key_tam is the value of longest matched TAM from TAM dictionary.
         return key_tam
     except Exception as e:
@@ -290,20 +292,22 @@ def word_search_from_end(search_word):
 
 
 def search_tam_row2(concept_list):
+    ranjak_list= ["cala", "dAla", "cuka", "xe", "le", "bETa", "uTa", "jA", "padZa", "A"]
     tam_list_row2=identify_vb(concept_list)
-    #print("This is our TAM:",tam_list_row2)
+    # print("This is our vb:",tam_list_row2)
      
     for concept_with_hyphen in tam_list_row2:
-        #print("The verb group to be replaced:",concept_with_hyphen)
+        # print("The verb group to be replaced:",concept_with_hyphen)
         #concept_with_hyphen is the word in concept list that we have to replace
         if concept_with_hyphen.split("-")[1]=="":
+            
             real_tam_temp="0"
         else:
             real_tam_temp=concept_with_hyphen.split("-")[1]
-        #print(real_tam_temp)
+        # print(real_tam_temp)
         if real_tam_temp=="0":
             root_concept=concept_with_hyphen.split("-")[0]
-            #print(root_concept)
+            # print("rc:",root_concept)
             search_word=root_concept.strip("_1")
             if "+" in root_concept:
                 search_word=root_concept.split("+")[1]
@@ -323,7 +327,7 @@ def search_tam_row2(concept_list):
             #Word after hyphen in verb group
             root_concept=concept_with_hyphen.split("-")[0] 
             #Word before hyphen in verb group
-            #print("root_concept:",root_concept)
+            # print("root_concept:",root_concept)
             root_concept=root_concept.strip("_1")
             if "+" in root_concept:
                 root_concept=root_concept.split("+")[1]
@@ -331,19 +335,35 @@ def search_tam_row2(concept_list):
                 root_concept=root_concept.strip("_1")
             wx_word_for_root_concept=root_word_dict[root_concept]
             #this is the original word for root_concept
-            #print(wx_word_for_root_concept)
+            # print(wx_word_for_root_concept)
             #real_tam_temp=real_tam_temp.strip("_")
             for char in real_tam_temp:
                 if char=="_":
                     real_tam_temp=real_tam_temp.replace(char," ")
-            #print("real_tam_temp",real_tam_temp)
-            #if real_tam_temp=="0":
-
-            real_tam_search=wx_word_for_root_concept+""+real_tam_temp
+            # print("real_tam_temp",real_tam_temp)
+            
+            ranjak_search_vaux=real_tam_temp.split()[0]
+            # print("rsv",ranjak_search_vaux)
+            add_to_vaux=""
+            # add_to_vaux=real_tam_temp.split()[1]
+            # print(add_to_vaux)
+            try:
+                add_to_vaux=real_tam_temp.split()[1]
+            except:
+                pass
+            root_of_ranjak_search_vaux=root_word_dict_reverse[ranjak_search_vaux.strip()]
+            if root_of_ranjak_search_vaux in ranjak_list:
+                real_tam_temp=root_word_dict[root_of_ranjak_search_vaux]
+                real_tam_temp=suffix_dictionary[real_tam_temp.strip()]+" "+add_to_vaux
+            else:  
+                real_tam_temp=ranjak_search_vaux+" "+add_to_vaux
+            # print("rtm",real_tam_temp)
+            real_tam_search=wx_word_for_root_concept+" "+real_tam_temp
             #if "_" in real_tam_search:
             #    real_tam_search=real_tam_search.strip("_")
-            #print("real tam search_2:",real_tam_search) #This is the real TAM that we work with,searching in the backend happens on this.
+            # print("real tam search_2:",real_tam_search) #This is the real TAM that we work with,searching in the backend happens on this.
             key_tam=word_search_from_end(real_tam_search)
+            # print("key_tam",key_tam)
             #The above function,returns the actual TAM matching from the TAM dictionary
             #if no match found in TAM dictionary,it returns none.
             #print("print key_tam is:",key_tam)
@@ -422,7 +442,7 @@ def get_row2():
                 #dependency=
         #main condition check begins here:
         
-        if pos_tag=="PSP"  or pos_tag=="SYM" or pos_tag=="CC":
+        if pos_tag=="PSP"  or pos_tag=="SYM" or pos_tag=="CC" or pos_tag=="RP":
             continue
         elif pos_tag=="VM" and word_info=="main": #Do not add suffix for these words because we have to do TAM search on them and it creates a problem later.
             #print("this is the word:",word)
@@ -500,6 +520,24 @@ def get_row4(row_2):
     sem_category_list=[]
     #for key in NER_dict:
      #   print(key)
+    
+    gen_info = prune_output_list
+    sem_category_list=[]
+    #for key in NER_dict:
+     #   print(key)
+    #print(gen_info)
+    for item in gen_info:
+        prune_list_for_con = item.split(',')
+        gen_from_prune = prune_list_for_con[3]
+        #print(gen_from_prune)
+        if gen_from_prune == "m":
+            gen_from_prune = "male"
+        elif gen_from_prune == "f":
+            gen_from_prune = "female"
+        else: 
+            gen_from_prune = ""
+        # print(gen_from_prune)
+        # sem_category_list.append(gen_from_prune)
     if len(NER_dict)==0:
         for concept in row_2:
             #print(concept)
@@ -547,26 +585,33 @@ def get_row5(row_2):
         if word==",":
             gnp_list_temp.append("")
         else:
-            gender="-"
+            # gender="-"
             number="-"
-            person="-"
+            # person="-"
             for line in prune_output_list:
+                #print(line)
                 if word == line.split(",")[2]:
                     #print("line",line)
-                    gender=line.split(",")[3]
+                    #gender=line.split(",")[3]
                     number=line.split(",")[4]
-                    person=line.split(",")[5]
+                    #person=line.split(",")[5]
                     #print("gender:",gender)
-                    if gender=="unk":
-                        gender="-"
+                    # if gender=="unk":
+                    # if person=="unk":
+                    #     person="-"
+                     #     gender="-"
+                    if number=="s":
+                        number="sg"
+                    if number=="p":
+                        number="pl"
                     if number=="unk":
-                        number="-"
-                    if person=="unk":
-                        person="-"
-            gnp_list_temp.append("["+""+gender+" "+number+" "+person+"]")
+                        number=""
+            # gnp_list_temp.append("["+""+gender+" "+number+" "+person+"]")
+            gnp_list_temp.append(number)
                     
     #print("gnp_list_temp:",gnp_list_temp)               
     return gnp_list_temp
+   
 #---------------------------------------------------------------------
 #Row 6:Dependencies
 
@@ -698,6 +743,72 @@ def get_row_unk(row_2):
         comma_list.append("")
     return comma_list 
 #--------------------------------------------------------------------
+#row 8
+def get_row8(row_2):
+# Ranjak kriya infomation in 8th row
+    ranjak_list = ["cala", "dAla", "cuka", "xe", "le", "bETa", "uTa", "jA", "padZa", "A"]
+    complete_info = []
+
+    for concept in row_2:
+        if "-" in concept:
+            
+            for element in parser_output_list:
+                pos = element[4]
+                index = element[0]
+                word_rel = element[7]
+                word = element[1]
+            
+                if pos == "VM" and word_rel == "main":    
+                    word = wx_words_dictionary[int(index)]
+                    # print(word)
+                    vm_next = int(index)+1
+                    vm_next_word = wx_words_dictionary[vm_next]
+                    # print(vm_next_word)
+                    vm_next_ele = parser_output_list[vm_next-1]
+                    # print(vm_next_ele)
+                    vm_next_tag = vm_next_ele[4]
+                    # print(vm_next_tag)
+
+                    if vm_next_tag == "VAUX":
+                        for tag in prune_output_list:
+                            word_val = tag.split(',')
+                            if vm_next_word == word_val[1]:
+                                # print(word_val[2])
+                                if word_val[2] in ranjak_list:
+                                    # print(word_val[2]) # [shade:xe_1]
+                                    complete_info.append("["+""+"shade"+":"+word_val[2]+"_1"+"]")     
+
+                    else:
+                        complete_info.append("") 
+                                                                                       
+        else:
+            complete_info.append("")
+
+# Discourse particle information in 8th row
+    for word in row_2:
+        for line in info_list_final:
+            # print(line)
+            if line[1] == "RP":
+                rp_index = line[0]
+                rp_rel = line[2]
+                # print(rp_rel)            
+                rp_word = wx_words_dictionary[rp_index]
+                rp_root_word = root_word_dict_reverse[rp_word] # RP word in 8th row
+                # print(rp_root_word)  
+                rp_rel_word = wx_words_dictionary[int(rp_rel)]
+                rp_rel_root_word = root_word_dict_reverse[rp_rel_word]
+
+                row2_root = [word.replace("_1", "") for word in row_2]
+                if rp_rel_root_word in row2_root:
+                    rp_rel_word_index = row2_root.index(rp_rel_root_word)
+                    # print(rp_rel_word_index)
+                    for index in range(len(row_2)):
+                        if rp_rel_word_index == index:
+                            complete_info[index] = rp_root_word
+
+    return complete_info
+
+#-----------------------------------------------------------------------------
 #Row 10:Sentence type
 def get_row10():
     sentence_type=[]
@@ -739,18 +850,18 @@ if __name__=="__main__":
         row_2_temp=row_2.copy()
         row_2_chg=pronouns_n_qnwords_to_replace(row_2_temp)
         row_3=get_row3(row_2)
-        row_4=get_row4(row_2)
+       # row_4=get_row4(row_2)
         row_5=get_row5(row_2)
         row_6=get_row6(row_2)
         row_7=get_row_unk(row_2)
-        row_8=get_row_unk(row_2)
+        row_8=get_row8(row_2)
         row_9=get_row_unk(row_2)
         row_10=get_row10()
         #get_warning(row_2)
         print(row_1)
         print(",".join(row_2_temp))
         print(",".join(map(str,row_3)))
-        print(",".join(row_4))
+      #  print(",".join(row_4))
         print(",".join(map(str,row_5)))
         print(",".join(row_6))
         print(",".join(row_7))
